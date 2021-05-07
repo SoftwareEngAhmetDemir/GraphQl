@@ -1,0 +1,21 @@
+query{
+ desc1: events{
+   ...frag
+  }
+  
+  desc2: events{
+   ...frag
+  }
+  
+  
+  
+}
+fragment frag on Event
+  {
+    title
+  }
+  
+  
+  
+  
+  #alias nameofVariable:function(v:"")  this is the aliases
