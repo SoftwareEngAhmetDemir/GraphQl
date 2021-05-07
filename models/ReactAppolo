@@ -1,0 +1,46 @@
+import "./App.css";
+import { createApolloFetch } from 'apollo-fetch';
+import { useEffect,useState } from "react";
+
+
+const uri = 'http://localhost:5000/graphql';
+
+const query = `
+mutation {
+  createEvent(
+  eventInput: {title:"A Test", description:"Does desc",
+      price: 9.99, date:"2021-05-04T16:05:02.623Z"}
+  ){
+
+ title 
+  description
+
+  }
+  }
+`;
+const apolloFetch = createApolloFetch({ uri });
+var dd = apolloFetch({ query });
+
+ function App() {
+
+  const [mydata, setData] = useState({});
+
+
+
+ 
+  
+  return (
+    <div className="App">
+    <button onClick={()=>{
+      return dd.then(data=>{
+        setData(data);
+       // console.log(data)
+        }).catch(err=> err);
+    }}>Click me</button>
+     <div> {JSON.stringify(mydata)}</div>
+    
+    </div>
+  );
+}
+
+export default App;
