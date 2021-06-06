@@ -1,0 +1,112 @@
+const { ApolloServer, PubSub, gql } = require('apollo-server');
+const pubsub = new PubSub();
+const PORT = 4000;
+
+// Schema definition
+const typeDefs = gql`
+
+type Color{
+  name:String
+  author: Author
+}
+type Course{
+  name:String
+}
+type Author {
+  name: String
+  books: [Book]
+}
+
+
+
+interface Book {
+  title: String
+  author: Author
+}
+
+type Textbook implements Book {
+  title: String
+  author: Author
+  courses: [Course]
+}
+
+type ColoringBook implements Book {
+  title: String
+  author: Author
+  colors: [Color]
+}
+
+type Query {
+  schoolBooks: [Book]
+}
+
+`;
+
+
+// Resolver map
+const resolvers = {
+  Book: {
+
+    __resolveType(book, context, info){
+      console.log(book)
+      if(book.courses){
+        return 'Textbook';
+      }
+      if(book.colors){
+        return 'ColoringBook';
+      }
+      return null; // GraphQLError is thrown
+    },
+  },
+  Query: {
+    schoolBooks: () => { 
+return [{title:"Book",courses:[{name:'myCourse1'},{name:'myCourse2'},{name:'myCourse3'}]},
+{title:'Colors',colors:[{name:'myColor1'},{name:'myColor2'},{name:"myColor3"}]},
+
+    ]
+     }
+  },
+};
+
+
+const server = new ApolloServer({
+  typeDefs,
+  resolvers,
+  subscriptions: {
+    path: '/subscriptions',
+    onConnect: (connectionParams, webSocket, context) => {
+      console.log('Client connected');
+    },
+    onDisconnect: (webSocket, context) => {
+      console.log('Client disconnected')
+    },
+  },
+});
+
+
+server.listen().then(({ url }) => {
+  console.log(`🚀 Subscription endpoint ready at ws://localhost:${PORT}${server.subscriptionsPath}`)
+  console.log('Query at studio.apollographql.com/dev')
+});
+
+// Start incrementing
+
+/*query GetBooks {
+  schoolBooks {
+    title # Always present (part of Book interface)
+    ... on Textbook {
+   
+      courses { # Only present in Textbook
+        name
+      
+      }
+    }
+    ... on ColoringBook {
+      
+      colors { # Only present in ColoringBook
+        name
+      }
+    }
+  }
+}
+*/
