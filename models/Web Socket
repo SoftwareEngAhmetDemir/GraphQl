@@ -6,26 +6,31 @@ const PORT = 4000;
 const typeDefs = gql`
   type Query {
     currentNumber: Int
-  }
+   R(name:String): String
+}
 
   type Subscription {
-    numberIncremented: Int
+    nm: Int
   }
 `;
 
 let currentNumber = 0;
-
+let y = "ahmed"
 // Resolver map
 const resolvers = {
   Query: {
+    R(__,args){
+        return args.name+" added from GQL";
+    },
+  
     currentNumber() {
       currentNumber++;
-      pubsub.publish('NUMBER_INCREMENTED', { numberIncremented: currentNumber });
+      pubsub.publish('NUMBER_INCREMENTED', {nm: currentNumber });
       return currentNumber;
     }
   },
   Subscription: {
-    numberIncremented: {
+    nm: {
       subscribe: () => pubsub.asyncIterator(['NUMBER_INCREMENTED']),
     },
   }
@@ -56,33 +61,3 @@ server.listen().then(({ url }) => {
   console.log(`🚀 Subscription endpoint ready at ws://localhost:${PORT}${server.subscriptionsPath}`)
   console.log('Query at studio.apollographql.com/dev')
 });
-
-// Start incrementing
-
-
-
-//open tow pages one is for query another one is for listening
-
-//first Page 
-
-query{
-  
-  
-  currentNumber
-  
-  
-  
-  
-}
-
-
-
-//Second Page
-
-subscription{
-  numberIncremented
-    
-  
-}
-
-
