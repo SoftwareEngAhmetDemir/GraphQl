@@ -1,0 +1,45 @@
+import React from 'react'
+import {
+  gql,
+  useLazyQuery,
+  useQuery,
+  useSubscription
+} from "@apollo/client";
+export default function App() {
+  const EXCHANGE_RATES = gql`
+  query{
+    currentNumber
+  }
+`;
+
+const gt = gql`
+subscription{
+  numberIncremented
+}
+
+`
+const {
+  data,
+  loading, 
+} = useSubscription(gt)
+// const methods= useQuery(
+//   EXCHANGE_RATES,
+//   { variables: { language: "english" } }
+// );
+
+// console.log(methods.data)
+const t = async()=>{
+ let x =  fetch('http://localhost:4000/pup');
+//  let result = await x.json();
+//  console.log(result)
+}
+
+console.log(data)
+  return (
+    <>
+  
+ <button onClick={()=>t()}>+++</button>
+ <div>{JSON.stringify(data)}</div>
+    </>
+  )
+}

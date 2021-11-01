@@ -1,0 +1,81 @@
+// @ts-check
+import { createServer } from "http";
+import express from "express";
+import { execute, subscribe } from "graphql";
+import { ApolloServer, gql } from "apollo-server-express";
+import { PubSub } from "graphql-subscriptions";
+import { SubscriptionServer } from "subscriptions-transport-ws";
+import { makeExecutableSchema } from "@graphql-tools/schema";
+import cors from 'cors';
+let currentNumber = 0;
+(async () => {
+ 
+  const PORT = 4000;
+  const pubsub = new PubSub();
+  const app = express();
+  app.use(cors());
+  const httpServer = createServer(app);
+
+  // Schema definition
+  const typeDefs = gql`
+    type Query {
+      currentNumber: Int
+    }
+
+    type Subscription {
+      numberIncremented: Int
+    }
+  `;
+ 
+  // Resolver map
+  const resolvers = {
+    Query: {
+      currentNumber() {
+        currentNumber++;
+        pubsub.publish("NUMBER_INCREMENTED", { numberIncremented: currentNumber });
+        return currentNumber;
+      },
+    },
+    Subscription: {
+      numberIncremented: {
+        subscribe: () => pubsub.asyncIterator(["NUMBER_INCREMENTED"]),
+      },
+    },
+  };
+
+  const schema = makeExecutableSchema({ typeDefs, resolvers });
+
+  const server = new ApolloServer({
+    schema,
+  });
+  await server.start();
+  server.applyMiddleware({ app });
+
+  SubscriptionServer.create(
+    { schema, execute, subscribe },
+    { server: httpServer, path: server.graphqlPath }
+  );
+app.get('/pup',(req,res)=>{
+ 
+  currentNumber++;
+  pubsub.publish("NUMBER_INCREMENTED", { numberIncremented: currentNumber });
+  res.json({});
+})
+  httpServer.listen(PORT, () => {
+    console.log(
+      `🚀 Query endpoint ready at http://localhost:${PORT}${server.graphqlPath}`
+    );
+    console.log(
+      `🚀 Subscription endpoint ready at ws://localhost:${PORT}${server.graphqlPath}`
+    );
+  });
+
+  
+  // function incrementNumber() {
+  //   currentNumber++;
+  //   pubsub.publish("NUMBER_INCREMENTED", { numberIncremented: currentNumber });
+  //   setTimeout(incrementNumber, 1000);
+  // }
+  // // Start incrementing
+  // incrementNumber();
+})();
